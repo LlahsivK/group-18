@@ -1,0 +1,243 @@
+---
+title: "Ceilometer project - Analysis 3 - ARIMA models"
+output: html_notebook
+---
+
+
+Section 0 - Various libs
+
+```{r}
+library(ggplot2)
+library(forecast)
+library(Metrics) #For various test metrics
+library(dplyr)
+library(dtw)
+library(hydroGOF) #for IOA
+library(tidyr)
+library(tidyverse)
+```
+
+Section 1 - Data prep
+
+Read data
+
+```{r}
+df_merriwa <- read.csv("D:/MSDS/DS Project/Git repos/group-18/Cleaned_Data/Merriwa_cleaned.csv")
+df_lidcombe <- read.csv("D:/MSDS/DS Project/Git repos/group-18/Cleaned_Data/Lidcombe_cleaned.csv")
+
+df_merriwa
+```
+
+
+Defining a universal train test split
+```{r}
+df_merriwa_test <- tail(df_merriwa, n=24)
+df_lidcombe_test <- tail(df_lidcombe, n = 24)
+
+df_merriwa_train <- head(df_merriwa, n = nrow(df_merriwa) - 24)
+df_lidcombe_train <- head(df_lidcombe, n = nrow(df_lidcombe) - 24)
+```
+
+Section 1.2 Various test stats
+
+```{r}
+ioa <- function(sim, obs){
+  mean_sim <- mean(sim)
+  mean_obs <- mean(obs)
+  
+  ia <- 1 - (sum(sim - obs)^2)/(sum(abs(sim-mean_obs)+abs(obs-mean_obs))^2)
+  
+  return(ia)
+}
+
+
+mbe <- function(sim, obs){
+  return(mean(sim - obs))
+}
+
+
+mase <- function(sim, obs, training_series){
+  n <- length(training_series)
+  d <- sum(abs(diff(training_series, lag = 1)))/(n-1)
+  
+  errors <- abs(sim - obs)
+  
+  return(mean(errors)/d)
+  
+}
+```
+
+
+```{r}
+stats_metrics <- function(sim, obs, training_data, title){
+
+  ioa <- ioa(sim, obs)
+  rmse <- rmse(sim, obs)
+  mae <- mae(sim, obs)
+  mbe <- mbe(sim, obs)
+  mase <- mase(sim, obs, training_data)
+  dtw_dist <- dtw(sim, obs)$distance
+
+  print(title)
+  print('IOA RMSE MAE MBE DTW MASE')
+  sprintf("%0.5f %0.2f %0.2f %0.2f %0.2f %0.5f", ioa, rmse, mae, mbe, dtw_dist, mase)
+  }
+```
+
+
+
+Section 2 - Modelling
+
+2.1 Simple auto ARIMA model - no external vars
+
+Looking at just auto arima with no external vars - just at Merriwa for now
+
+```{r}
+arima_merriwa <- auto.arima(df_merriwa_train[,'CL_BLH'])
+
+arima_merriwa
+checkresiduals(arima_merriwa)
+```
+Simple forecast - no external factors
+
+```{r}
+df_merriwa_forecast <- forecast(arima_merriwa, h = 24)
+
+
+plot(df_merriwa_forecast)
+```
+Basically as per Python. Since the best model is ARIMA(0,1,0) basically takes the last value to perpetuity
+
+2.2 Auto arima with external factors
+
+Incorporating various external factors
+
+
+Define xreg list
+```{r}
+xreg_list <- c("Carbon.monoxide", "Humidity", "Nephelometer", "Nitric.Oxide", "Nitrogen.Dioxide", "Ozone", "PM10", "PM2.5", "Rainfall", 
+                  "Sulphur.Dioxide", "Temperature", "Wind.Direction..10m.", "Wind.Direction.Sigma.Theta", "Wind.Speed..10m.")
+```
+
+Function that creates an xreg dataframe
+
+```{r}
+xreg_dataframe_builder <- function (df_set){
+
+  xreg_datalist <- list()
+  
+  for (i in 1:length(xreg_list)){
+    xreg_datalist[[xreg_list[i]]] <- df_set[, xreg_list[i]]
+  }
+  
+  
+  df <- do.call(cbind, xreg_datalist)
+  
+  return(df)
+}
+```
+
+Build the xreg dataframes
+
+```{r}
+xreg_merriwa_train <- xreg_dataframe_builder(df_merriwa_train)
+xreg_lidcombe_train <- xreg_dataframe_builder(df_lidcombe_train)
+
+xreg_merriwa_test <- xreg_dataframe_builder(df_merriwa_test)
+xreg_lidcombe_test <- xreg_dataframe_builder(df_lidcombe_test)
+
+```
+
+Train model with xreg
+
+In Merriwa
+```{r}
+
+arima_merriwa_v2 <- auto.arima(df_merriwa_train[, 'CL_BLH'], xreg = xreg_merriwa_train)
+
+checkresiduals(arima_merriwa_v2)
+```
+
+In Lidcombe
+
+```{r}
+arima_lidcombe <- auto.arima(df_lidcombe_train[, 'CL_BLH'], xreg = xreg_lidcombe_train)
+
+checkresiduals(arima_lidcombe)
+```
+
+
+
+Forecasting
+
+```{r}
+
+forecasted_results_df <- function(arima_model, xreg_test, test_df){
+  arima_forecast <- forecast(arima_model, h = 24, xreg = xreg_test)
+  
+  results_df <- data.frame(test_df[, 22:24])
+  results_df['ARIMA model'] = arima_forecast$mean
+  
+  return(results_df)
+}
+
+```
+
+Forecasted results
+
+```{r}
+results_df_merriwa_arima <- forecasted_results_df(arima_merriwa_v2, xreg_merriwa_test, df_merriwa_test)
+results_df_lidcombe_arima <- forecasted_results_df(arima_lidcombe, xreg_lidcombe_test, df_lidcombe_test)
+```
+
+
+Stats
+
+```{r}
+
+stats_metrics(results_df_merriwa_arima$`ARIMA model`, results_df_merriwa_arima$CL_BLH, df_merriwa_train$CL_BLH, 'Merriwa stats')
+```
+
+```{r}
+
+stats_metrics(results_df_lidcombe_arima$`ARIMA model`, results_df_lidcombe_arima$CL_BLH, df_lidcombe_train$CL_BLH, 'Lidcombe stats')
+```
+
+Plots
+
+```{r}
+predicted_plots <- function(forecasted_df, test_df, title){
+
+  year <- as.integer(format(as.POSIXct(test_df$Date, format = "%Y-%m-%d"), format = "%Y"))
+  month <- as.integer(format(as.POSIXct(test_df$Date, format = "%Y-%m-%d"), format = "%m"))
+  date <- as.integer(format(as.POSIXct(test_df$Date, format = "%Y-%m-%d"), format = "%d"))
+  
+  forecasted_df$datetime <- ISOdatetime(year, month, date, df_merriwa_test[,'Hour'], 0, 0)
+  
+  pivot_df <- pivot_longer(forecasted_df, cols = 1:4, names_to = 'model', values_to = 'value')
+
+  ggplot(pivot_df, aes(x = datetime, y = value, color = model))+
+    geom_line(aes(linetype = model, color = model, size = model))+
+    ylim(0,1800)+
+    ggtitle(title)+
+    scale_color_manual(values = c('red','blue','orange','green'))+
+    scale_linetype_manual(values = c('solid','longdash','dashed','dashed'))+
+    scale_size_manual(values = c(0.5,1,0.8,0.8))+
+    theme(legend.title = element_blank())+
+    labs(x = 'Date time', y = 'Boundary layer height (m)')
+  
+}
+
+```
+
+
+```{r}
+predicted_plots(results_df_merriwa_arima, df_merriwa_test, 'PBL Height in Merriwa - ARIMA model')
+```
+
+```{r}
+predicted_plots(results_df_lidcombe_arima, df_lidcombe_test, 'PBL Height in Lidcombe - ARIMA model')
+```
+Not bad.
+
+A simple model - perhaps can be used as a alternative comaprison to the SARIMAX model + rolling 1 hour method developed in Python
