@@ -44,4 +44,26 @@ We consider 4 broad methods for modelling the PBL heights:
 Python and R
 
 ### Packages used
-FILL ME
+#### Python packages used
+
+##### Python libraries
+Library name| Version
+-------------|--------
+Pandas| 1.3.2
+Numpy| 1.20.3
+scikit-learn| 0.24.2
+matplotlib| 3.4.2
+fastdtw| 1.1.0
+xgboost| 1.4.0
+lightgbm| 3.2.1
+FILL ME| FILL ME
+
+##### R libraries
+Library name| Version
+-------------|--------
+ggplot2| 3.3.5
+dplyr| 1.0.7
+dtw| 1.22
+tidyr| 1.1.3
+tidyverse| 1.3.1
+forecast| 8.15
