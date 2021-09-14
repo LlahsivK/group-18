@@ -39,7 +39,7 @@ We consider 4 broad methods for modelling the PBL heights:
 * Ensemble methods; and
 * Neural network methods.
 
-## Soffware used
+## Software used
 
 Python and R
 
@@ -55,7 +55,8 @@ matplotlib| 3.4.2
 fastdtw| 1.1.0
 xgboost| 1.4.0
 lightgbm| 3.2.1
-FILL ME| FILL ME
+seaborn| 0.11.0
+datetime
 
 ##### R libraries
 Library name| Version
