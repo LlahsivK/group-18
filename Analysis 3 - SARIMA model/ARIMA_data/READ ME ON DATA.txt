@@ -1,0 +1,6 @@
+The file
+L3_DEFAULT_0_20210216_Merriwa has been augmented to include timestamps at 17/2/2021
+
+This is done solely for purposes of fitting the SARIMA model.
+
+This does not impact the other analysis
