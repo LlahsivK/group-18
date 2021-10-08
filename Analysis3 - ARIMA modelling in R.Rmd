@@ -77,10 +77,11 @@ stats_metrics <- function(sim, obs, training_data, title){
   mbe <- mbe(sim, obs)
   mase <- mase(sim, obs, training_data)
   dtw_dist <- dtw(sim, obs)$distance
+  correlation <- cor(sim, obs)
 
   print(title)
-  print('IOA RMSE MAE MBE DTW MASE')
-  sprintf("%0.5f %0.2f %0.2f %0.2f %0.2f %0.5f", ioa, rmse, mae, mbe, dtw_dist, mase)
+  print('IOA RMSE MAE MBE DTW MASE CORR')
+  sprintf("%0.5f %0.2f %0.2f %0.2f %0.2f %0.5f %0.5f", ioa, rmse, mae, mbe, dtw_dist, mase, correlation)
   }
 ```
 
