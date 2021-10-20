@@ -29,6 +29,8 @@ Here we perform visual and statistical comparisons of the PBL heights against th
 
 Comparison of PBL heights against metereological factors that may influence the PBL height. Here we look to establish if there are causal relationships between PBL heights and these "external" factors.
 
+The results of the analysis are located in the Statistics folder.
+
 ## Analysis 3
 
 Modelling of PBL height taking into account factors in Analysis 2 and actual historical PBL heights as derived from the CL51 ceilometer. Here our aim is to see if incorporation of historical PBL heights can improve upon the prediction of PBL heights as compared to the CCAM-CTM and WRF models.
@@ -56,6 +58,11 @@ fastdtw| 1.1.0
 xgboost| 1.4.0
 lightgbm| 3.2.1
 seaborn| 0.11.0
+statsmodels| 0.12.2
+pmdarima| 1.8.2
+scipy | 1.6.2
+re | 2.2.1
+
 
 ##### R libraries
 Library name| Version
