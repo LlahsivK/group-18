@@ -45,7 +45,7 @@ We consider 4 broad methods for modelling the PBL heights:
 
 Python and R
 
-### Packages used
+### Libraries used
 
 ##### Python libraries
 Library name| Version
