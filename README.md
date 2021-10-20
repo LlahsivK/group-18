@@ -62,6 +62,15 @@ statsmodels| 0.12.2
 pmdarima| 1.8.2
 scipy | 1.6.2
 re | 2.2.1
+Keras | 2.6.0
+Pandas | 1.1.5
+numpy | 1.19.5
+glob2 | 0.7
+requests | 2.23.0
+seaborn | 0.11.2
+sklearn |  0.22.2
+matplotlib | 3.2.2
+scipy | 1.4.1
 
 
 ##### R libraries
